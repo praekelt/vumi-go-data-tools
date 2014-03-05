@@ -15,7 +15,7 @@ setup(
     package_data={},
     include_package_data=True,
     install_requires=[
-        # pypi packages go here
+        'python-dateutil==2.2',
     ],
     classifiers=[
         'Development Status :: 3 - Alpha',

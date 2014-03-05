@@ -1,2 +1,4 @@
 ve/
 *.DS_Store
+*.pyc
+*.egg-info/
