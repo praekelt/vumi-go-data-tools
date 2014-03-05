@@ -26,7 +26,6 @@ class VumiGoMessageParser(object):
 
     def __init__(self, args):
         self.args = args
-        self.run()
 
     def filtered(self, message):
         # check message and write out if it matches filter
@@ -88,4 +87,5 @@ if __name__ == '__main__':
     parser.add_argument('-e','--end', help='Date time to extract to (as ISO timestamp, e.g. 2013-09-10 03:00:00)', required=False)
 
     args = parser.parse_args()
-    VumiGoMessageParser(vars(args))
+    gdt = VumiGoMessageParser(vars(args))
+    gdt.run()
