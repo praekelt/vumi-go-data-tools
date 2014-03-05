@@ -9,6 +9,12 @@ for post campaign analysis. These tools should give insight into session counts,
 returning visitors and effectiveness of different approaches taken with differing 
 Vumi Go contact groups that interact with a service.
 
+## Set up
+
+`$ virtualenv ve`
+`$ . ve/bin/activate`
+`$ pip install -e .`
+
 ## Usage
 
 ``` 
