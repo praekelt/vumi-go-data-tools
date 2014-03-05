@@ -9,7 +9,14 @@ class VumiGoMessageParser(object):
     stdin = sys.stdin
     stdout = sys.stdout
 
-    # List positions
+    errors = []
+
+    header = ["timestamp", "from_addr", "to_addr", "content",
+                "message_id", "in_reply_to", "session_event", "transport_type",
+                "direction", "network_handover_status", "network_handover_reason",
+                "delivery_status", "endpoint"]
+
+    # Header positions
     timestamp = 0
     from_addr = 1
     to_addr = 2
@@ -54,28 +61,22 @@ class VumiGoMessageParser(object):
         pass
 
     def run(self):
-        errors = []
-        data_started = False
         line = 0
         for message in csv.reader(iter(self.stdin.readline, ''), delimiter=',', quotechar='"'):
             line += 1
-            if message == ["timestamp", "from_addr", "to_addr", "content",
-                    "message_id", "in_reply_to", "session_event", "transport_type",
-                    "direction", "network_handover_status", "network_handover_reason",
-                    "delivery_status", "endpoint"]:
-                # Ignore header row
-                data_started = True
-            elif data_started and len(message) == 13:
-                # Start processing
-                self.filtered(message)
-                self.extracted(message)
-            elif len(message) != 13:
-                errors.append([message, line, "Strange fields in row"])
-            else:
-                errors.append([message, line, "Unparsable entry"])
-        if len(errors) != 0:
-            self.stdout.write(unicode(errors))
+            self.handle_message(message)           
+        if len(self.errors) != 0:
+            self.stdout.write(unicode(self.errors))
 
+    def handle_message(self, message):
+        if message == self.header:
+            pass
+        elif len(message) == 13:
+            # Start processing
+            self.filtered(message)
+            self.extracted(message)
+        else:
+            self.errors.append([message, "Unparsable entry"])
 
 if __name__ == '__main__':
 
