@@ -18,15 +18,11 @@ Vumi Go contact groups that interact with a service.
 ## Usage
 
 ``` 
-usage: vumigomessage.py [-h] -i INPUT -o OUTPUT [-m MSISDN]
+usage: python -m gdt.vumigomessage -m [-h] [-m MSISDN]
                         [-d {inbound,outbound,all}] [-s START] [-e END]
 
 optional arguments:
   -h, --help            show this help message and exit
-  -i INPUT, --input INPUT
-                        Input CSV file name
-  -o OUTPUT, --output OUTPUT
-                        Output file name
   -m MSISDN, --msisdn MSISDN
                         MSISDN to extract messages
   -d {inbound,outbound,all}, --direction {inbound,outbound,all}
@@ -41,5 +37,5 @@ optional arguments:
 
 ## Examples
 
-`python vumigomessage.py -i test/messages-export-good.csv -o results.txt -m +27817030792 -d outbound -s "2013-09-09 19:24" -e "2013-09-09 19:38"`
+`less gdt/tests/messages-export-good.csv | python -m gdt.vumigomessage -m +27817030792 -d outbound -s "2013-09-09 19:24" -e "2013-09-09 19:38" > results.txt`
 
