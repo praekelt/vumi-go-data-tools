@@ -106,4 +106,4 @@ if __name__ == '__main__':
     parser.add_argument('-e','--end', help='Date time to extract to (as ISO timestamp, e.g. 2013-09-10 03:00:00)', required=False)
 
     args = parser.parse_args()
-    DoAllTheThings(args)
+    DoAllTheThings(vars(args))
