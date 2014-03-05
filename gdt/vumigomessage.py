@@ -30,7 +30,7 @@ class VumiGoMessageParser(object):
     def filtered(self, message):
         # check message and write out if it matches filter
         matches = False
-        if self.args['msisdn']:
+        if 'msisdn' in self.args:
             matches = False # reset because if defined, needs to match
             if self.args['direction'] == "all" and self.args['msisdn'] in [message[self.from_addr], message[self.to_addr]]:
                 matches = True
@@ -38,7 +38,7 @@ class VumiGoMessageParser(object):
                 matches = True
             elif self.args['direction'] == "outbound" and self.args['msisdn'] == message[self.to_addr]:
                 matches = True
-        if self.args['start'] and self.args['end']:
+        if 'start' in self.args and 'end' in self.args:
             matches = False # reset because if defined, needs to match
             vumitimestamp = dateutil.parser.parse(message[self.timestamp])
             start = dateutil.parser.parse(self.args['start'])
@@ -73,7 +73,6 @@ class VumiGoMessageParser(object):
                 errors.append([message, line, "Strange fields in row"])
             else:
                 errors.append([message, line, "Unparsable entry"])
-
         if len(errors) != 0:
             self.stdout.write(unicode(errors))
 

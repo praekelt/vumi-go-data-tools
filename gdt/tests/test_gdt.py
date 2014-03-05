@@ -24,7 +24,11 @@ class GdtTestCase(TestCase):
             'start': '2013-09-09 19:20',
             'end': '2013-09-09 19:40'
         })
-        # datt.stdin.readline(datt.header)
-        # datt.stdin.readline('2013-09-09 19:24:03.289543,+27817030792,*120*8864*1203#,None,af266289e40949388b5a8cacb4a2d13a,None,new,ussd,inbound,,,,default')
+        
+        datt.stdin.write(datt.header)
+        datt.stdin.write('2013-09-09 19:24:03.289543,+27817030792,*120*8864*1203#,None,af266289e40949388b5a8cacb4a2d13a,None,new,ussd,inbound,,,,default')
+        datt.run()
+        # OR run directly?
+        # datt.filtered('2013-09-09 19:24:03.289543,+27817030792,*120*8864*1203#,None,af266289e40949388b5a8cacb4a2d13a,None,new,ussd,inbound,,,,default')
         self.assertEqual(
-            datt.stdout.getValue(), 'foo')
+            datt.stdout.getvalue(), 'foo')
