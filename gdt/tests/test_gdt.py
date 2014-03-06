@@ -41,7 +41,45 @@ class GdtTestCase(TestCase):
             'start': '2013-09-09 19:20',
             'end': '2013-09-09 19:40'
         })
-        line = "2013-09-10 19:24:03.289543,+27817030792,*120*8864*1203#,,af266289e40949388b5a8cacb4a2d13a,,new,ussd,inbound,,,,default\r\n"     
+        line = "2013-09-10 19:24:03.289543,+27817030792,*120*8864*1203#,,af266289e40949388b5a8cacb4a2d13a,,new,ussd,inbound,,,,default\r\n"
         datt.handle_message(self.load_and_read(datt, line))
         self.assertEqual(
             datt.stdout.getvalue(), '')
+
+
+class RefactoredGdtTestCase(TestCase):
+
+    def get_parser(self, options):
+        defaults = {
+            # some parser argparse defaults here
+        }
+        defaults.update(options)
+        return VumiGoMessageParser(defaults)
+
+    def parse(self, parser, csv):
+        parser.stdin = StringIO(csv)
+        parser.stdout = StringIO()
+        parser.run()
+        return parser.stdout.getvalue()
+
+    def test_date_match(self):
+        parser = self.get_parser({
+            'start': '2013-09-09 19:20',
+            'end': '2013-09-09 19:40'
+        })
+        line = ("2013-09-09 19:24:03.289543,+27817030792,*120*8864*1203#,"
+                ",af266289e40949388b5a8cacb4a2d13a,,new,ussd,inbound"
+                ",,,,default\r\n")
+        output = self.parse(parser, line)
+        self.assertEqual(output, line)
+
+    def test_date_not_match(self):
+        parser = self.get_parser({
+            'start': '2013-09-09 19:20',
+            'end': '2013-09-09 19:40'
+        })
+        line = ("2013-09-10 19:24:03.289543,+27817030792,*120*8864*1203#,"
+                ",af266289e40949388b5a8cacb4a2d13a,,new,ussd,inbound"
+                ",,,,default\r\n")
+        output = self.parse(parser, line)
+        self.assertEqual(output, '')

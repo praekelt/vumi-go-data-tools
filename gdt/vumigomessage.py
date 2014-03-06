@@ -62,9 +62,9 @@ class VumiGoMessageParser(object):
 
     def run(self):
         line = 0
-        for message in csv.reader(iter(self.stdin.readline, ''), delimiter=',', quotechar='"'):
+        for message in csv.reader(self.stdin, delimiter=',', quotechar='"'):
             line += 1
-            self.handle_message(message)           
+            self.handle_message(message)
         if len(self.errors) != 0:
             self.stdout.write(unicode(self.errors))
 
