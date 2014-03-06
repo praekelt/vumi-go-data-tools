@@ -1,0 +1,30 @@
+timestamp,from_addr,toish_addr,content,message_id,in_reply_to,session_event,transport_type,direction,network_handover_status,network_handover_reason,delivery_status,endpoint
+2013-09-09 19:24:03.289543, 2013-09-09 19:24:03.289543,+27817030792,*120*8864*1203#,None,af266289e40949388b5a8cacb4a2d13a,None,new,ussd,inbound,,,,default
+2013-09-09 19:40:04.293544,+27817030792,*120*8864*1203#,None,d54d64f9acbe4227b36c90ed39e9a374,None,new,ussd,inbound,,,,default
+2013-09-09 19:40:32.233714,+27817030792,*120*8864*1203#,,30c76137b8214d7fa556f3372ec0e15d,None,close,ussd,inbound,,,,default
+2013-09-09 19:40:24.235103,+27817030792,*120*8864*1203#,1,5e18928f686f4f20992dd60ee5b035dd,None,resume,ussd,inbound,,,,default
+2013-09-09 19:25:54.430878,+27817030792,*120*8864*1203#,,d57089ef63ce4a8aae236a6429f4ed97,None,close,ussd,inbound,,,,default
+2013-09-09 19:37:50.274845,+27817030792,*120*8864*1203#,None,b9bf37562ebe4fed9428b05545fc6479,None,new,ussd,inbound,,,,default
+2013-09-09 19:24:39.581072,+27817030792,*120*8864*1203#,HI,4dadb3840c11448887aaf080fc51c8c1,None,resume,ussd,inbound,,,,default
+2013-09-09 19:38:27.279985,+27817030792,*120*8864*1203#,,970ffd711e1543c2af1667c3e5e79c08,None,close,ussd,inbound,,,,default
+2013-09-09 19:25:33.188519,+27817030792,*120*8864*1203#,1,312f3fbef2ac444db0e8ae5d51b277e2,None,resume,ussd,inbound,,,,default
+2013-09-09 19:40:15.305527,+27817030792,*120*8864*1203#,222222,909a5a188e214db39fd3e51c8f8d5a40,None,resume,ussd,inbound,,,,default
+2013-09-09 19:38:20.437525,+27817030792,*120*8864*1203#,!restart,986e5a15aa3647de8ff1ff588fc4d11a,None,resume,ussd,inbound,,,,default
+2013-09-09 19:40:24.694431,*120*8864*1203#,+27817030792,"We think you said '222222'. Correct?
+1. Yes
+2. No",fa89bf003d214f6ab7a6ffa1c3d39a72,5e18928f686f4f20992dd60ee5b035dd,None,ussd,outbound,Unknown,,Unknown,default
+2013-09-09 19:37:50.738836,*120*8864*1203#,+27817030792,"We think you said 'HI'. Correct?
+1. Yes
+2. No",dc7d93f9c6554996bff4815ecafd27b7,b9bf37562ebe4fed9428b05545fc6479,None,ussd,outbound,Unknown,,Unknown,default
+2013-09-09 19:40:15.759862,*120*8864*1203#,+27817030792,"Thank you! Do you what to know what you said?
+1. Yes
+2. No",1d3328b7fb9842deae10033a8f28636c,909a5a188e214db39fd3e51c8f8d5a40,None,ussd,outbound,Unknown,,Unknown,default
+2013-09-09 19:24:03.756001,*120*8864*1203#,+27817030792,Say something please...,a925b10bd87e435a86f690b52f035269,af266289e40949388b5a8cacb4a2d13a,None,ussd,outbound,Unknown,,Unknown,default
+2013-09-09 19:38:20.942619,*120*8864*1203#,+27817030792,Say something please...,8ce9caa4f6e743c989a92482842fdbf2,986e5a15aa3647de8ff1ff588fc4d11a,None,ussd,outbound,Unknown,,Unknown,default
+2013-09-09 19:40:04.743547,*120*8864*1203#,+27817030792,Say something please...,cffac2ed5f3f45a8b71bed0d1a795264,d54d64f9acbe4227b36c90ed39e9a374,None,ussd,outbound,Unknown,,Unknown,default
+2013-09-09 19:25:33.679892,*120*8864*1203#,+27817030792,"We think you said 'HI'. Correct?
+1. Yes
+2. No",f5924ee56de745c18850161df75cb132,312f3fbef2ac444db0e8ae5d51b277e2,None,ussd,outbound,Unknown,,Unknown,default
+2013-09-09 19:24:40.057289,*120*8864*1203#,+27817030792,"Thank you! Do you what to know what you said?
+1. Yes
+2. No",4a7ddda24d934bb1bdc1401ec0ce2fdf,4dadb3840c11448887aaf080fc51c8c1,None,ussd,outbound,Unknown,,Unknown,default
