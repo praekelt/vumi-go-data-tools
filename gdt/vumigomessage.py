@@ -22,7 +22,9 @@ class Filter(object):
 
     def process(self, row):
         return reduce(
-            lambda accumulator, filter_: accumulator and filter_.apply(row),
+            lambda accumulator, filter_: (
+                (accumulator and filter_.apply(row))
+                if accumulator else accumulator),
             self._chain, self.apply(row))
 
 
