@@ -75,7 +75,8 @@ class FilterPipeline(object):
     def process(self, stdin=sys.stdin, stdout=sys.stdout):
         reader = csv.DictReader(stdin)
         writer = csv.DictWriter(stdout, fieldnames=reader.fieldnames)
-        writer.writeheader()
+        # writer.writeheader() only available in py27
+        writer.writerow(dict(zip(reader.fieldnames, reader.fieldnames)))
         for row in reader:
             for filter_ in self.filters:
                 if filter_.process(row):
