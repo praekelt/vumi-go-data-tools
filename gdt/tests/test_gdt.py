@@ -173,7 +173,8 @@ class CSVFilterPipelineTestCase(TestCase):
         fp = FilterPipeline([
             DirectionalFilter('inbound').chain(
                 MSISDNFilter('from_addr', '+27817030792')),
-            TimestampFilter('2013-09-10 00:00:00', '2013-09-10 23:59:59')
+            TimestampFilter(datetime(2013, 9, 10),
+                            datetime(2013, 9, 10, 23, 59, 59))
         ], codec=self.CODEC_CLASS)
         stdin = StringIO(self.SAMPLE)
         stdout = StringIO()
@@ -245,7 +246,8 @@ class JSONFilterPipelineTestCase(TestCase):
         fp = FilterPipeline([
             IsAReplyFilter().chain(
                 MSISDNFilter('from_addr', '+27817030792')),
-            TimestampFilter('2013-09-10 00:00:00', '2013-09-10 23:59:59')
+            TimestampFilter(datetime(2013, 9, 10),
+                            datetime(2013, 9, 10, 23, 59, 59))
         ], codec=self.CODEC_CLASS)
         stdin = StringIO(self.SAMPLE)
         stdout = StringIO()
