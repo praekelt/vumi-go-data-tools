@@ -53,15 +53,15 @@ class IsNotAReplyFilter(IsAReplyFilter):
 
 class MSISDNFilter(Filter):
 
-    def __init__(self, addr_direction, msisdn):
+    def __init__(self, addr_type, msisdn):
         super(MSISDNFilter, self).__init__()
-        if addr_direction not in ['to_addr', 'from_addr']:
+        if addr_type not in ['to_addr', 'from_addr']:
             raise FilterException
-        self.addr_direction = addr_direction
+        self.addr_type = addr_type
         self.msisdn = msisdn
 
     def apply(self, row):
-        return row.get(self.addr_direction) == self.msisdn
+        return row.get(self.addr_type) == self.msisdn
 
 
 class TimestampFilter(Filter):

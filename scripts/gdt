@@ -1,10 +1,13 @@
 #!python
 
 from gdt import cmdline
-from gdt.main import GDT
 
 if __name__ == '__main__':
+    # NOTE: argparse is insane
     parser = cmdline.get_parser()
-    args = parser.parse_args()
-    gdt = GDT(vars(args))
-    gdt.run()
+    cmd_args = vars(parser.parse_args())
+
+    dispatch = cmd_args.pop('dispatch')
+    handler = cmdline.dispatch[dispatch]
+    pipeline = handler(cmd_args)
+    pipeline.process()
