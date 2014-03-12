@@ -1,10 +1,10 @@
 #!python
 
 from gdt import cmdline
-from gdt.vumigomessage import VumiGoMessageParser
+from gdt.main import GDT
 
 if __name__ == '__main__':
     parser = cmdline.get_parser()
     args = parser.parse_args()
-    gdt = VumiGoMessageParser(vars(args))
+    gdt = GDT(vars(args))
     gdt.run()
