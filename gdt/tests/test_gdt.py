@@ -1,6 +1,7 @@
 from StringIO import StringIO
 from unittest import TestCase
 import csv
+from datetime import datetime
 
 from gdt.vumigomessage import (
     VumiGoMessageParser, DirectionalFilter, MSISDNFilter, TimestampFilter,
@@ -25,7 +26,6 @@ class GdtTestCase(TestCase):
     OUTBOUND_2 = ("2013-09-09 19:24:03.289543,*120*8864*1203#,+27817030710,"
                 ",af266289e40949388b5a8cacb4a2d13b,,resume,ussd,outbound"
                 ",,,,default\r\n")
-    
 
     def get_parser(self, options):
         defaults = {
@@ -42,8 +42,8 @@ class GdtTestCase(TestCase):
 
     def test_date_match(self):
         parser = self.get_parser({
-            'start': '2013-09-10 19:20',
-            'end': '2013-09-12 19:40'
+            'start': datetime(2013, 9, 10, 19, 20),
+            'end': datetime(2013, 9, 12, 19, 40)
         })
         SAMPLE = self.HEADER + self.INBOUND + self.OUTBOUND
         output = self.parse(parser, SAMPLE)
@@ -51,8 +51,8 @@ class GdtTestCase(TestCase):
 
     def test_date_not_match(self):
         parser = self.get_parser({
-            'start': '2013-09-10 19:20',
-            'end': '2013-09-10 19:40'
+            'start': datetime(2013, 9, 10, 19, 20),
+            'end': datetime(2013, 9, 12, 19, 40)
         })
         SAMPLE = self.HEADER + self.INBOUND_2 + self.OUTBOUND_2
         output = self.parse(parser, SAMPLE)
@@ -85,6 +85,7 @@ class GdtTestCase(TestCase):
         output = self.parse(parser, SAMPLE)
         self.assertEqual(output, SAMPLE)
 
+
 class FilterTestCase(TestCase):
 
     def test_directional_filter(self):
@@ -103,20 +104,20 @@ class FilterTestCase(TestCase):
         self.assertFalse(f.apply({'to_addr': '123'}))
 
     def test_timestamp_filter(self):
-        f = TimestampFilter('2013-01-01')
+        f = TimestampFilter(datetime(2013, 1, 1))
         self.assertTrue(f.apply({'timestamp': '2013-01-01'}))
         self.assertFalse(f.apply({'timestamp': '2012-01-01'}))
 
-        f = TimestampFilter('2013-01-01', '2013-02-01')
+        f = TimestampFilter(datetime(2013, 1, 1), datetime(2013, 2, 1))
         self.assertTrue(f.apply({'timestamp': '2013-01-01'}))
         self.assertFalse(f.apply({'timestamp': '2013-03-01'}))
 
         self.assertRaises(
             FilterException, TimestampFilter,
-            '2013-01-01', '2000-01-01')
+            datetime(2013, 1, 1), datetime(2000, 1, 1))
 
     def test_filter_chaining(self):
-        f = TimestampFilter('2013-01-01').chain(
+        f = TimestampFilter(datetime(2013, 1, 1)).chain(
             DirectionalFilter('inbound'))
         self.assertTrue(f.process({
             'direction': 'inbound', 'timestamp': '2013-01-01'}))
@@ -125,8 +126,9 @@ class FilterTestCase(TestCase):
         self.assertFalse(f.process({
             'direction': 'inbound', 'timestamp': '2000-01-01'}))
 
-        f = TimestampFilter('2013-01-01', '2013-12-31').chain(
-            DirectionalFilter('inbound'))
+        f = TimestampFilter(datetime(2013, 1, 1),
+                            datetime(2013, 12, 31)).chain(
+                                DirectionalFilter('inbound'))
 
         self.assertTrue(f.process({
             'direction': 'inbound', 'timestamp': '2013-06-01'}))
@@ -159,7 +161,8 @@ class FilterPipelineTestCase(TestCase):
         fp = FilterPipeline([
             DirectionalFilter('inbound').chain(
                 MSISDNFilter('from_addr', '+27817030792')),
-            TimestampFilter('2013-09-10 00:00:00', '2013-09-10 23:59:59')
+            TimestampFilter(datetime(2013, 9, 10),
+                            datetime(2013, 9, 10, 23, 59, 59))
         ])
         stdin = StringIO(self.SAMPLE)
         stdout = StringIO()

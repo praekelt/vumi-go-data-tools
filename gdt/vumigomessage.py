@@ -1,5 +1,6 @@
 import argparse
 import csv
+from datetime import datetime
 import dateutil.parser
 import sys
 
@@ -55,8 +56,8 @@ class TimestampFilter(Filter):
 
     def __init__(self, start, end=None):
         super(TimestampFilter, self).__init__()
-        self.start = dateutil.parser.parse(start)
-        self.end = (dateutil.parser.parse(end) if end is not None else None)
+        self.start = start
+        self.end = end
         if self.end and self.end < self.start:
             raise FilterException(
                 'End timestamp must come after start timestamp.')
@@ -73,6 +74,12 @@ class FilterPipeline(object):
     def __init__(self, filters=None):
         self.filters = ([] if filters is None else filters)
         self._chain = []
+
+    def add(self, filter):
+        self.filters.append(filter)
+
+    def empty(self):
+        return len(self.filters) == 0
 
     def process(self, stdin=sys.stdin, stdout=sys.stdout):
         reader = csv.DictReader(stdin)
@@ -91,57 +98,49 @@ class VumiGoMessageParser(object):
     stdin = sys.stdin
     stdout = sys.stdout
 
-    # Header positions
-    timestamp = 0
-    from_addr = 1
-    to_addr = 2
-    content = 3
-    message_id = 4
-    in_reply_to = 5
-    session_event = 6
-    transport_type = 7
-    direction = 8
-    network_handover_status = 9
-    network_handover_reason = 10
-    delivery_status = 11
-    endpoint = 12
-
     def __init__(self, args):
         self.args = args
 
-
     def run(self):
-        filters = []
+        fp = FilterPipeline()
         for arg in self.args:
             if arg == 'msisdn':
-                if 'direction' in self.args: # do we need to chain?
+                if 'direction' in self.args:  # do we need to chain?
                     if self.args['direction'] == "all":
-                        filters.append(DirectionalFilter('inbound').chain(MSISDNFilter('from_addr', self.args['msisdn'])))
-                        filters.append(DirectionalFilter('outbound').chain(MSISDNFilter('to_addr', self.args['msisdn'])))
+                        fp.add(DirectionalFilter('inbound').chain(
+                            MSISDNFilter('from_addr', self.args['msisdn'])))
+                        fp.add(DirectionalFilter('outbound').chain(
+                            MSISDNFilter('to_addr', self.args['msisdn'])))
                     elif self.args['direction'] == "inbound":
-                        filters.append(DirectionalFilter('inbound').chain(MSISDNFilter('from_addr', self.args['msisdn'])))
+                        fp.add(DirectionalFilter('inbound').chain(
+                            MSISDNFilter('from_addr', self.args['msisdn'])))
                     elif self.args['direction'] == "outbound":
-                        filters.append(DirectionalFilter('outbound').chain(MSISDNFilter('to_addr', self.args['msisdn'])))
-                else: # no chain required
-                    filters.append(MSISDNFilter('to_addr', self.args['msisdn']))
-                    filters.append(MSISDNFilter('from_addr', self.args['msisdn']))
+                        fp.add(DirectionalFilter('outbound').chain(
+                            MSISDNFilter('to_addr', self.args['msisdn'])))
+                else:  # no chain required
+                    fp.add(MSISDNFilter('to_addr', self.args['msisdn']))
+                    fp.add(MSISDNFilter('from_addr', self.args['msisdn']))
+
             if arg == 'direction' and 'msisdn' not in self.args:
                 if self.args['direction'] == "all":
-                    filters.append(DirectionalFilter('inbound'))
-                    filters.append(DirectionalFilter('outbound'))
+                    fp.add(DirectionalFilter('inbound'))
+                    fp.add(DirectionalFilter('outbound'))
                 else:
-                    filters.append(DirectionalFilter(self.args['direction']))
+                    fp.add(DirectionalFilter(self.args['direction']))
+
             if arg == 'start':
                 if 'end' not in self.args:
                     self.args['end'] = None
-                if filters == []:
-                    filters.append(TimestampFilter(self.args['start'], self.args['end']))
+                if fp.empty():
+                    fp.add(TimestampFilter(self.args['start'],
+                                           self.args['end']))
                 else:
-                    for link in filters:
-                        link.chain(TimestampFilter(self.args['start'], self.args['end']))
-        fp = FilterPipeline(filters)
+                    for link in fp.filters:
+                        link.chain(TimestampFilter(self.args['start'],
+                                                   self.args['end']))
+
         fp.process(stdin=self.stdin, stdout=self.stdout)
- 
+
 
 if __name__ == '__main__':
 
@@ -154,11 +153,13 @@ if __name__ == '__main__':
     parser.add_argument(
         '-s', '--start',
         help=('Date time to start from '
-              '(as ISO timestamp, e.g. 2013-09-01 01:00:00)'), required=False)
+              '(as ISO timestamp, e.g. 2013-09-01 01:00:00)'),
+        required=False, type=dateutil.parser.parse)
     parser.add_argument(
         '-e', '--end',
         help=('Date time to extract to '
-              '(as ISO timestamp, e.g. 2013-09-10 03:00:00)'), required=False)
+              '(as ISO timestamp, e.g. 2013-09-10 03:00:00)'),
+        required=False, type=dateutil.parser.parse)
 
     args = parser.parse_args()
     gdt = VumiGoMessageParser(vars(args))
