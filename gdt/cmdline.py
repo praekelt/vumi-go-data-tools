@@ -9,11 +9,15 @@ from gdt.filters import (FilterPipeline, MSISDNFilter, TimestampFilter,
 def make_pipeline(filter_class, kwargs):
     return FilterPipeline([filter_class(**kwargs)])
 
-dispatch = {
-    'msisdn': partial(make_pipeline, MSISDNFilter),
-    'daterange': partial(make_pipeline, TimestampFilter),
-    'direction': partial(make_pipeline, DirectionalFilter)
-}
+
+def dispatch(name, kwargs):
+    dispatch_map = {
+        'msisdn': partial(make_pipeline, MSISDNFilter),
+        'daterange': partial(make_pipeline, TimestampFilter),
+        'direction': partial(make_pipeline, DirectionalFilter)
+    }
+
+    return dispatch_map[name](kwargs)
 
 
 def get_parser():
@@ -33,7 +37,7 @@ def get_parser():
         help='Which address type to filter on.',
         dest='addr_type',
         choices=['to_addr', 'from_addr'], required=True)
-    msisdn_parser.set_defaults(dispatch='msisdn')
+    msisdn_parser.set_defaults(subcommand_name='msisdn')
 
     daterange_parser = subparsers.add_parser(
         'daterange', help='Filter on a date range.')
@@ -49,7 +53,7 @@ def get_parser():
               '(as ISO timestamp, e.g. 2013-09-10 03:00:00)'),
         dest='end',
         required=False, type=dateutil.parser.parse)
-    daterange_parser.set_defaults(dispatch='daterange')
+    daterange_parser.set_defaults(subcommand_name='daterange')
 
     direction_parser = subparsers.add_parser(
         'direction', help='Filter on message direction.')
@@ -57,6 +61,6 @@ def get_parser():
         '-d', '--direction', help='Message direction to extract',
         required=True, choices=['inbound', 'outbound'],
         dest='direction')
-    direction_parser.set_defaults(dispatch='direction')
+    direction_parser.set_defaults(subcommand_name='direction')
 
     return parser

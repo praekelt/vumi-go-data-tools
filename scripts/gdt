@@ -7,7 +7,6 @@ if __name__ == '__main__':
     parser = cmdline.get_parser()
     cmd_args = vars(parser.parse_args())
 
-    dispatch = cmd_args.pop('dispatch')
-    handler = cmdline.dispatch[dispatch]
-    pipeline = handler(cmd_args)
+    subcommand_name = cmd_args.pop('subcommand_name')
+    pipeline = cmdline.dispatch(subcommand_name, cmd_args)
     pipeline.process()
