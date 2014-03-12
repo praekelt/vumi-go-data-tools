@@ -98,20 +98,33 @@ class VumiGoMessageParser(object):
 
     def run(self):
         filters = []
-        if 'msisdn' in self.args:
-            filters.append(MSISDNFilter('from_addr', self.args['msisdn']))
-            filters.append(MSISDNFilter('to_addr', self.args['msisdn']))
-        if 'direction' in self.args:
-            if self.args['direction'] == "all":
-                filters.append(DirectionalFilter('inbound'))
-                filters.append(DirectionalFilter('outbound'))
-            else:
-                filters.append(DirectionalFilter(self.args['direction']))
-        if 'start' in self.args:
-            if 'end' not in self.args:
-                self.args['end'] = None
-            filters.append(TimestampFilter(self.args['start'], self.args['end']))
-
+        for arg in self.args:
+            if arg == 'msisdn':
+                if 'direction' in self.args: # do we need to chain?
+                    if self.args['direction'] == "all":
+                        filters.append(DirectionalFilter('inbound').chain(MSISDNFilter('from_addr', self.args['msisdn'])))
+                        filters.append(DirectionalFilter('outbound').chain(MSISDNFilter('to_addr', self.args['msisdn'])))
+                    elif self.args['direction'] == "inbound":
+                        filters.append(DirectionalFilter('inbound').chain(MSISDNFilter('from_addr', self.args['msisdn'])))
+                    elif self.args['direction'] == "outbound":
+                        filters.append(DirectionalFilter('outbound').chain(MSISDNFilter('to_addr', self.args['msisdn'])))
+                else: # no chain required
+                    filters.append(MSISDNFilter('to_addr', self.args['msisdn']))
+                    filters.append(MSISDNFilter('from_addr', self.args['msisdn']))
+            if arg == 'direction' and 'msisdn' not in self.args:
+                if self.args['direction'] == "all":
+                    filters.append(DirectionalFilter('inbound'))
+                    filters.append(DirectionalFilter('outbound'))
+                else:
+                    filters.append(DirectionalFilter(self.args['direction']))
+            if arg == 'start':
+                if 'end' not in self.args:
+                    self.args['end'] = None
+                if filters == []:
+                    filters.append(TimestampFilter(self.args['start'], self.args['end']))
+                else:
+                    for link in filters:
+                        link.chain(TimestampFilter(self.args['start'], self.args['end']))
         fp = FilterPipeline(filters)
         fp.process(stdin=self.stdin, stdout=self.stdout)
  
