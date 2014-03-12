@@ -1,5 +1,6 @@
 import argparse
 import csv
+from datetime import datetime
 import dateutil.parser
 import json
 import sys
@@ -68,8 +69,8 @@ class TimestampFilter(Filter):
 
     def __init__(self, start, end=None):
         super(TimestampFilter, self).__init__()
-        self.start = dateutil.parser.parse(start)
-        self.end = (dateutil.parser.parse(end) if end is not None else None)
+        self.start = start
+        self.end = end
         if self.end and self.end < self.start:
             raise FilterException(
                 'End timestamp must come after start timestamp.')
@@ -121,6 +122,12 @@ class FilterPipeline(object):
         self.codec_class = (self.default_codec if codec is None else codec)
         self._chain = []
 
+    def add(self, filter):
+        self.filters.append(filter)
+
+    def empty(self):
+        return len(self.filters) == 0
+
     def process(self, stdin=sys.stdin, stdout=sys.stdout):
         codec = self.codec_class(stdin, stdout)
         for row in codec.readrows():
@@ -135,74 +142,49 @@ class VumiGoMessageParser(object):
     stdin = sys.stdin
     stdout = sys.stdout
 
-    errors = []
-
-    header = ["timestamp", "from_addr", "to_addr", "content",
-                "message_id", "in_reply_to", "session_event", "transport_type",
-                "direction", "network_handover_status", "network_handover_reason",
-                "delivery_status", "endpoint"]
-
-    # Header positions
-    timestamp = 0
-    from_addr = 1
-    to_addr = 2
-    content = 3
-    message_id = 4
-    in_reply_to = 5
-    session_event = 6
-    transport_type = 7
-    direction = 8
-    network_handover_status = 9
-    network_handover_reason = 10
-    delivery_status = 11
-    endpoint = 12
-
     def __init__(self, args):
         self.args = args
 
-    def filtered(self, message):
-        # check message and write out if it matches filter
-        matches = False
-        if 'msisdn' in self.args:
-            matches = False # reset because if defined, needs to match
-            if self.args['direction'] == "all" and self.args['msisdn'] in [message[self.from_addr], message[self.to_addr]]:
-                matches = True
-            elif self.args['direction'] == "inbound" and self.args['msisdn'] == message[self.from_addr]:
-                matches = True
-            elif self.args['direction'] == "outbound" and self.args['msisdn'] == message[self.to_addr]:
-                matches = True
-        if 'start' in self.args and 'end' in self.args:
-            matches = False # reset because if defined, needs to match
-            vumitimestamp = dateutil.parser.parse(message[self.timestamp])
-            start = dateutil.parser.parse(self.args['start'])
-            end = dateutil.parser.parse(self.args['end'])
-            if (vumitimestamp > start and vumitimestamp < end):
-                matches = True
-        # output
-        if matches:
-            csv.writer(self.stdout).writerow(message)
-
-    def extracted(self, message):
-        # check message and collect metrics
-        pass
-
     def run(self):
-        line = 0
-        for message in csv.reader(self.stdin, delimiter=',', quotechar='"'):
-            line += 1
-            self.handle_message(message)
-        if len(self.errors) != 0:
-            self.stdout.write(unicode(self.errors))
+        fp = FilterPipeline()
+        for arg in self.args:
+            if arg == 'msisdn':
+                if 'direction' in self.args:  # do we need to chain?
+                    if self.args['direction'] == "all":
+                        fp.add(DirectionalFilter('inbound').chain(
+                            MSISDNFilter('from_addr', self.args['msisdn'])))
+                        fp.add(DirectionalFilter('outbound').chain(
+                            MSISDNFilter('to_addr', self.args['msisdn'])))
+                    elif self.args['direction'] == "inbound":
+                        fp.add(DirectionalFilter('inbound').chain(
+                            MSISDNFilter('from_addr', self.args['msisdn'])))
+                    elif self.args['direction'] == "outbound":
+                        fp.add(DirectionalFilter('outbound').chain(
+                            MSISDNFilter('to_addr', self.args['msisdn'])))
+                else:  # no chain required
+                    fp.add(MSISDNFilter('to_addr', self.args['msisdn']))
+                    fp.add(MSISDNFilter('from_addr', self.args['msisdn']))
 
-    def handle_message(self, message):
-        if message == self.header:
-            pass
-        elif len(message) == 13:
-            # Start processing
-            self.filtered(message)
-            self.extracted(message)
-        else:
-            self.errors.append([message, "Unparsable entry"])
+            if arg == 'direction' and 'msisdn' not in self.args:
+                if self.args['direction'] == "all":
+                    fp.add(DirectionalFilter('inbound'))
+                    fp.add(DirectionalFilter('outbound'))
+                else:
+                    fp.add(DirectionalFilter(self.args['direction']))
+
+            if arg == 'start':
+                if 'end' not in self.args:
+                    self.args['end'] = None
+                if fp.empty():
+                    fp.add(TimestampFilter(self.args['start'],
+                                           self.args['end']))
+                else:
+                    for link in fp.filters:
+                        link.chain(TimestampFilter(self.args['start'],
+                                                   self.args['end']))
+
+        fp.process(stdin=self.stdin, stdout=self.stdout)
+
 
 if __name__ == '__main__':
 
@@ -215,11 +197,13 @@ if __name__ == '__main__':
     parser.add_argument(
         '-s', '--start',
         help=('Date time to start from '
-              '(as ISO timestamp, e.g. 2013-09-01 01:00:00)'), required=False)
+              '(as ISO timestamp, e.g. 2013-09-01 01:00:00)'),
+        required=False, type=dateutil.parser.parse)
     parser.add_argument(
         '-e', '--end',
         help=('Date time to extract to '
-              '(as ISO timestamp, e.g. 2013-09-10 03:00:00)'), required=False)
+              '(as ISO timestamp, e.g. 2013-09-10 03:00:00)'),
+        required=False, type=dateutil.parser.parse)
 
     args = parser.parse_args()
     gdt = VumiGoMessageParser(vars(args))
