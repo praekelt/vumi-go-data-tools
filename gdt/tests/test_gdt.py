@@ -3,9 +3,87 @@ from unittest import TestCase
 import csv
 
 from gdt.vumigomessage import (
-    DirectionalFilter, MSISDNFilter, TimestampFilter,
+    VumiGoMessageParser, DirectionalFilter, MSISDNFilter, TimestampFilter,
     FilterPipeline, FilterException)
 
+
+class GdtTestCase(TestCase):
+
+    HEADER = ("timestamp,from_addr,to_addr,content,message_id,in_reply_to,"
+              "session_event,transport_type,direction,"
+              "network_handover_status,network_handover_reason,"
+              "delivery_status,endpoint\r\n")
+    INBOUND = ("2013-09-10 19:24:03.289543,+27817030792,*120*8864*1203#,"
+               ",af266289e40949388b5a8cacb4a2d13a,,new,ussd,inbound"
+               ",,,,default\r\n")
+    OUTBOUND = ("2013-09-11 19:24:03.289543,*120*8864*1203#,+27817030792,"
+                ",af266289e40949388b5a8cacb4a2d13b,,resume,ussd,outbound"
+                ",,,,default\r\n")
+    INBOUND_2 = ("2013-09-09 19:24:03.289543,+27817030710,*120*8864*1203#,"
+               ",af266289e40949388b5a8cacb4a2d13a,,new,ussd,inbound"
+               ",,,,default\r\n")
+    OUTBOUND_2 = ("2013-09-09 19:24:03.289543,*120*8864*1203#,+27817030710,"
+                ",af266289e40949388b5a8cacb4a2d13b,,resume,ussd,outbound"
+                ",,,,default\r\n")
+    
+
+    def get_parser(self, options):
+        defaults = {
+            # some parser argparse defaults here
+        }
+        defaults.update(options)
+        return VumiGoMessageParser(defaults)
+
+    def parse(self, parser, csv):
+        parser.stdin = StringIO(csv)
+        parser.stdout = StringIO()
+        parser.run()
+        return parser.stdout.getvalue()
+
+    def test_date_match(self):
+        parser = self.get_parser({
+            'start': '2013-09-10 19:20',
+            'end': '2013-09-12 19:40'
+        })
+        SAMPLE = self.HEADER + self.INBOUND + self.OUTBOUND
+        output = self.parse(parser, SAMPLE)
+        self.assertEqual(output, SAMPLE)
+
+    def test_date_not_match(self):
+        parser = self.get_parser({
+            'start': '2013-09-10 19:20',
+            'end': '2013-09-10 19:40'
+        })
+        SAMPLE = self.HEADER + self.INBOUND_2 + self.OUTBOUND_2
+        output = self.parse(parser, SAMPLE)
+        self.assertEqual(output, self.HEADER)
+
+    def test_date_msisdn_match_inbound(self):
+        parser = self.get_parser({
+            'msisdn': '+27817030710',
+            'direction': 'inbound'
+        })
+        SAMPLE = self.HEADER + self.INBOUND_2 + self.OUTBOUND_2
+        output = self.parse(parser, SAMPLE)
+        self.assertEqual(output, self.HEADER + self.INBOUND_2)
+
+    def test_date_msisdn_match_outbound(self):
+        parser = self.get_parser({
+            'msisdn': '+27817030710',
+            'direction': 'outbound'
+        })
+        SAMPLE = self.HEADER + self.INBOUND_2 + self.OUTBOUND_2
+        output = self.parse(parser, SAMPLE)
+        self.assertEqual(output, self.HEADER + self.OUTBOUND_2)
+
+    def test_date_msisdn_match_all(self):
+        parser = self.get_parser({
+            'msisdn': '+27817030710',
+            'direction': 'all'
+        })
+        SAMPLE = self.HEADER + self.INBOUND_2 + self.OUTBOUND_2
+        output = self.parse(parser, SAMPLE)
+        self.assertEqual(output, SAMPLE)
 
 class FilterTestCase(TestCase):
 

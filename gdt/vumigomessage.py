@@ -91,6 +91,20 @@ class VumiGoMessageParser(object):
     stdin = sys.stdin
     stdout = sys.stdout
 
+    # Header positions
+    timestamp = 0
+    from_addr = 1
+    to_addr = 2
+    content = 3
+    message_id = 4
+    in_reply_to = 5
+    session_event = 6
+    transport_type = 7
+    direction = 8
+    network_handover_status = 9
+    network_handover_reason = 10
+    delivery_status = 11
+    endpoint = 12
 
     def __init__(self, args):
         self.args = args
