@@ -1,6 +1,7 @@
 import argparse
 import csv
 import dateutil.parser
+import json
 import sys
 
 
@@ -38,6 +39,18 @@ class DirectionalFilter(Filter):
         return row.get('direction') == self.direction
 
 
+class IsAReplyFilter(Filter):
+
+    def apply(self, row):
+        return row.get('in_reply_to')
+
+
+class IsNotAReplyFilter(IsAReplyFilter):
+
+    def apply(self, row):
+        return not super(IsNotAReplyFilter, self).apply(row)
+
+
 class MSISDNFilter(Filter):
 
     def __init__(self, addr_direction, msisdn):
@@ -68,21 +81,52 @@ class TimestampFilter(Filter):
         return self.start <= vumitimestamp
 
 
+class CSVMessageCodec(object):
+
+    def __init__(self, stdin, stdout):
+        self.reader = csv.DictReader(stdin)
+        self.writer = csv.DictWriter(
+            stdout, fieldnames=self.reader.fieldnames)
+        # writer.writeheader() only available in py27
+        self.writer.writerow(
+            dict(zip(self.reader.fieldnames, self.reader.fieldnames)))
+
+    def readrows(self):
+        return self.reader
+
+    def writerow(self, message):
+        self.writer.writerow(message)
+
+
+class JSONMessageCodec(object):
+
+    def __init__(self, stdin, stdout):
+        self.stdin = stdin
+        self.stdout = stdout
+
+    def readrows(self):
+        for line in self.stdin:
+            yield json.loads(line)
+
+    def writerow(self, message):
+        json.dump(message, fp=self.stdout)
+
+
 class FilterPipeline(object):
 
-    def __init__(self, filters=None):
+    default_codec = CSVMessageCodec
+
+    def __init__(self, filters=None, codec=None):
         self.filters = ([] if filters is None else filters)
+        self.codec_class = (self.default_codec if codec is None else codec)
         self._chain = []
 
     def process(self, stdin=sys.stdin, stdout=sys.stdout):
-        reader = csv.DictReader(stdin)
-        writer = csv.DictWriter(stdout, fieldnames=reader.fieldnames)
-        # writer.writeheader() only available in py27
-        writer.writerow(dict(zip(reader.fieldnames, reader.fieldnames)))
-        for row in reader:
+        codec = self.codec_class(stdin, stdout)
+        for row in codec.readrows():
             for filter_ in self.filters:
                 if filter_.process(row):
-                    writer.writerow(row)
+                    codec.writerow(row)
                     break
 
 
