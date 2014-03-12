@@ -17,6 +17,7 @@ setup(
     install_requires=[
         'python-dateutil==2.2',
     ],
+    scripts=['scripts/gdt'],
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',
