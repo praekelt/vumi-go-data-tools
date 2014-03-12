@@ -85,6 +85,13 @@ class GdtTestCase(TestCase):
         output = self.parse(parser, SAMPLE)
         self.assertEqual(output, SAMPLE)
 
+    def test_date_msisdn_no_direction(self):
+        parser = self.get_parser({
+            'msisdn': '+27817030710'
+        })
+        SAMPLE = self.HEADER + self.INBOUND + self.OUTBOUND + self.INBOUND_2 + self.OUTBOUND_2
+        output = self.parse(parser, SAMPLE)
+        self.assertEqual(output, self.HEADER + self.INBOUND_2 + self.OUTBOUND_2)
 
 class FilterTestCase(TestCase):
 
