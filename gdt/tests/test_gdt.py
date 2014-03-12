@@ -1,11 +1,13 @@
+import csv
+import json
 from StringIO import StringIO
 from unittest import TestCase
-import csv
 from datetime import datetime
 
 from gdt.vumigomessage import (
     VumiGoMessageParser, DirectionalFilter, MSISDNFilter, TimestampFilter,
-    FilterPipeline, FilterException)
+    FilterPipeline, FilterException, IsAReplyFilter, IsNotAReplyFilter,
+    CSVMessageCodec, JSONMessageCodec)
 
 
 class GdtTestCase(TestCase):
@@ -143,7 +145,9 @@ class FilterTestCase(TestCase):
             'direction': 'inbound', 'timestamp': '2014-06-01'}))
 
 
-class FilterPipelineTestCase(TestCase):
+class CSVFilterPipelineTestCase(TestCase):
+
+    CODEC_CLASS = CSVMessageCodec
 
     HEADER = ("timestamp,from_addr,to_addr,content,message_id,in_reply_to,"
               "session_event,transport_type,direction,"
@@ -158,20 +162,100 @@ class FilterPipelineTestCase(TestCase):
     SAMPLE = HEADER + INBOUND + OUTBOUND
 
     def test_filter_pipeline(self):
-        fp = FilterPipeline([DirectionalFilter('inbound')])
+        fp = FilterPipeline([DirectionalFilter('inbound')],
+                            codec=self.CODEC_CLASS)
         stdin = StringIO(self.SAMPLE)
         stdout = StringIO()
         fp.process(stdin=stdin, stdout=stdout)
-        self.assertEqual(stdout.getvalue(), self.HEADER + self.INBOUND)
+        self.assertLineEqual(stdout.getvalue(), self.HEADER + self.INBOUND)
 
     def test_filter_pipeline_chaining(self):
         fp = FilterPipeline([
             DirectionalFilter('inbound').chain(
                 MSISDNFilter('from_addr', '+27817030792')),
-            TimestampFilter(datetime(2013, 9, 10),
-                            datetime(2013, 9, 10, 23, 59, 59))
-        ])
+            TimestampFilter('2013-09-10 00:00:00', '2013-09-10 23:59:59')
+        ], codec=self.CODEC_CLASS)
         stdin = StringIO(self.SAMPLE)
         stdout = StringIO()
         fp.process(stdin=stdin, stdout=stdout)
-        self.assertEqual(stdout.getvalue(), self.HEADER + self.INBOUND)
+        self.assertLineEqual(stdout.getvalue(), self.HEADER + self.INBOUND)
+
+    def assertLineEqual(self, line1, line2):
+        self.assertEqual(line1, line2)
+
+
+class JSONFilterPipelineTestCase(TestCase):
+
+    CODEC_CLASS = JSONMessageCodec
+
+    HEADER = ''
+    INBOUND = json.dumps({
+        "transport_name": "mtn_nigeria_ussd_transport",
+        "transport_metadata": {},
+        "group": None,
+        "from_addr": "+27817030792",
+        "timestamp": "2013-09-10 19:24:03.289543",
+        "provider": "mtn_nigeria",
+        "to_addr": "*120*8864*1203#",
+        "content": "",
+        "routing_metadata": {
+            "go_hops": [],
+            "endpoint_name": "default"
+        },
+        "message_version": "20110921",
+        "transport_type": "ussd",
+        "in_reply_to": None,
+        "session_event": "new",
+        "message_id": "af266289e40949388b5a8cacb4a2d13a",
+        "message_type": "user_message",
+    })
+
+    OUTBOUND = json.dumps({
+        "transport_name": "mtn_nigeria_ussd_transport",
+        "transport_metadata": {},
+        "group": None,
+        "from_addr": "*120*8864*1203#",
+        "timestamp": "2013-09-11 19:24:03.289543",
+        "provider": "mtn_nigeria",
+        "to_addr": "27123456789",
+        "content": "",
+        "routing_metadata": {
+            "go_hops": [],
+            "endpoint_name": "default"
+        },
+        "message_version": "20110921",
+        "transport_type": "ussd",
+        "in_reply_to": "af266289e40949388b5a8cacb4a2d13a",
+        "session_event": "resume",
+        "message_id": "af266289e40949388b5a8cacb4a2d13b",
+        "message_type": "user_message",
+    })
+
+    SAMPLE = '\n'.join([INBOUND, OUTBOUND])
+
+    def test_filter_pipeline(self):
+        fp = FilterPipeline([IsNotAReplyFilter()],
+                            codec=self.CODEC_CLASS)
+        stdin = StringIO(self.SAMPLE)
+        stdout = StringIO()
+        fp.process(stdin=stdin, stdout=stdout)
+        self.assertLineEqual(stdout.getvalue(), self.HEADER + self.INBOUND)
+
+    def test_filter_pipeline_chaining(self):
+        fp = FilterPipeline([
+            IsAReplyFilter().chain(
+                MSISDNFilter('from_addr', '+27817030792')),
+            TimestampFilter('2013-09-10 00:00:00', '2013-09-10 23:59:59')
+        ], codec=self.CODEC_CLASS)
+        stdin = StringIO(self.SAMPLE)
+        stdout = StringIO()
+        fp.process(stdin=stdin, stdout=stdout)
+        self.assertLineEqual(stdout.getvalue(), self.HEADER + self.INBOUND)
+
+    def assertLineEqual(self, line1, line2):
+        d1 = json.loads(line1)
+        d2 = json.loads(line2)
+        self.assertEqual(
+            d1, d2,
+            'Line 1:\n%s\n\nDoes not match Line 2:\n%s' % (
+                json.dumps(d1, indent=2), json.dumps(d2, indent=2)))
