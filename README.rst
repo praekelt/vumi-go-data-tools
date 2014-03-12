@@ -16,29 +16,15 @@ Vumi Go contact groups that interact with a service.
   $ virtualenv ve
   $ . ve/bin/activate
   $ pip install -e .
-  $ gdt --help
 
 ## Usage
 
-```
-usage: python -m gdt.vumigomessage -m [-h] [-m MSISDN]
-                        [-d {inbound,outbound,all}] [-s START] [-e END]
+::
 
-optional arguments:
-  -h, --help            show this help message and exit
-  -m MSISDN, --msisdn MSISDN
-                        MSISDN to extract messages
-  -d {inbound,outbound,all}, --direction {inbound,outbound,all}
-                        Message direction to extract
-  -s START, --start START
-                        Date time to start from (as ISO timestamp, e.g.
-                        2013-09-01 01:00:00)
-  -e END, --end END     Date time to extract to (as ISO timestamp, e.g.
-                        2013-09-10 03:00:00)
-
-```
+  $ gdt --help
 
 ## Examples
 
-`less gdt/tests/messages-export-good.csv | python -m gdt.vumigomessage -m +27817030792 -d outbound -s "2013-09-09 19:24" -e "2013-09-09 19:38" > results.txt`
+::
 
+  $ cat gdt/tests/messages-export-good.csv | gdt msisdn -m +27817030792 -t to_addr | gdt direction -d outbound | gdt daterange -s "2013-09-09 19:24" -e "2013-09-09 19:38"
