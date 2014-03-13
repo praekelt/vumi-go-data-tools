@@ -6,6 +6,7 @@ from gdt import codec
 from gdt.filters import (FilterPipeline, MSISDNFilter, TimestampFilter,
                          DirectionalFilter, SessionEventFilter)
 from gdt.extractors import ExtractorPipeline, FieldExtractor
+from gdt.aggregators import AggregatorPipeline, UniquesAggregator
 
 
 def make_pipeline(filter_class, kwargs, codec_class):
@@ -15,6 +16,11 @@ def make_pipeline(filter_class, kwargs, codec_class):
 def make_extractor(extractor_class, kwargs, codec_class):
     return ExtractorPipeline([extractor_class(**kwargs)],
                              codec_class=codec_class)
+
+
+def make_aggregator(aggregator_class, kwargs, codec_class):
+    return AggregatorPipeline(aggregator_class(**kwargs),
+                              codec_class=codec_class)
 
 
 def dispatch(args):
@@ -27,6 +33,7 @@ def dispatch(args):
         'direction': partial(make_pipeline, DirectionalFilter),
         'session': partial(make_pipeline, SessionEventFilter),
         'extract': partial(make_extractor, FieldExtractor),
+        'aggregate': partial(make_aggregator, UniquesAggregator),
     }
 
     pipeline = dispatch_map[subcommand_name](args, codec_class)
@@ -104,5 +111,12 @@ def get_parser():
         help='`strftime` formatting to apply to the timestamp.',
         dest='date_format', required=True)
     extractor_parser.set_defaults(subcommand_name='extract')
+
+    aggregator_parser = subparsers.add_parser(
+        'aggregate', help='Aggregate fields')
+    aggregator_parser.add_argument(
+        '-f', '--field', help='The field to extract.',
+        dest='fields', required=True, nargs='+')
+    aggregator_parser.set_defaults(subcommand_name='aggregate')
 
     return parser

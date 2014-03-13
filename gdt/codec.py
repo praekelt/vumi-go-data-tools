@@ -4,13 +4,14 @@ import json
 
 class CSVMessageCodec(object):
 
-    def __init__(self, stdin, stdout):
+    def __init__(self, stdin, stdout, write_header=True):
         self.reader = csv.DictReader(stdin)
         self.writer = csv.DictWriter(
             stdout, fieldnames=self.reader.fieldnames)
-        # writer.writeheader() only available in py27
-        self.writer.writerow(
-            dict(zip(self.reader.fieldnames, self.reader.fieldnames)))
+        if write_header:
+            # writer.writeheader() only available in py27
+            self.writer.writerow(
+                dict(zip(self.reader.fieldnames, self.reader.fieldnames)))
 
     def readrows(self):
         return self.reader
