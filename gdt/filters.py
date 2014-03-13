@@ -85,9 +85,10 @@ class FilterPipeline(object):
 
     default_codec = CSVMessageCodec
 
-    def __init__(self, filters=None, codec=None):
+    def __init__(self, filters=None, codec_class=None):
         self.filters = ([] if filters is None else filters)
-        self.codec_class = (self.default_codec if codec is None else codec)
+        self.codec_class = (self.default_codec if codec_class is None
+                            else codec_class)
         self._chain = []
 
     def add(self, filter):

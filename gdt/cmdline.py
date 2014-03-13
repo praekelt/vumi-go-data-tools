@@ -2,27 +2,42 @@ import argparse
 import dateutil.parser
 from functools import partial
 
+from gdt import codec
 from gdt.filters import (FilterPipeline, MSISDNFilter, TimestampFilter,
                          DirectionalFilter)
 
 
-def make_pipeline(filter_class, kwargs):
-    return FilterPipeline([filter_class(**kwargs)])
+def make_pipeline(filter_class, kwargs, codec_class):
+    return FilterPipeline([filter_class(**kwargs)], codec_class=codec_class)
 
 
-def dispatch(name, kwargs):
+def dispatch(args):
+    subcommand_name = args.pop('subcommand_name')
+    codec_class = args.pop('codec_class')
+
     dispatch_map = {
         'msisdn': partial(make_pipeline, MSISDNFilter),
         'daterange': partial(make_pipeline, TimestampFilter),
         'direction': partial(make_pipeline, DirectionalFilter)
     }
 
-    return dispatch_map[name](kwargs)
+    pipeline = dispatch_map[subcommand_name](args, codec_class)
+    pipeline.process()
+
+
+def get_codec(codec_name):
+    return {
+        'csv': codec.CSVMessageCodec,
+        'json': codec.JSONMessageCodec,
+    }.get(codec_name)
 
 
 def get_parser():
 
     parser = argparse.ArgumentParser(description='Vumi Go Data Tools')
+    parser.add_argument(
+        '-c', '--codec', help='Which codec to use.', required=False,
+        dest='codec_class', type=get_codec, default=codec.CSVMessageCodec)
 
     subparsers = parser.add_subparsers(help='use `command --help`.')
 

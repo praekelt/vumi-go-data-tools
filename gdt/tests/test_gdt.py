@@ -174,7 +174,7 @@ class CSVFilterPipelineTestCase(TestCase):
 
     def test_filter_pipeline(self):
         fp = FilterPipeline([DirectionalFilter('inbound')],
-                            codec=self.CODEC_CLASS)
+                            codec_class=self.CODEC_CLASS)
         stdin = StringIO(self.SAMPLE)
         stdout = StringIO()
         fp.process(stdin=stdin, stdout=stdout)
@@ -186,7 +186,7 @@ class CSVFilterPipelineTestCase(TestCase):
                 MSISDNFilter('from_addr', '+27817030792')),
             TimestampFilter(datetime(2013, 9, 10),
                             datetime(2013, 9, 10, 23, 59, 59))
-        ], codec=self.CODEC_CLASS)
+        ], codec_class=self.CODEC_CLASS)
         stdin = StringIO(self.SAMPLE)
         stdout = StringIO()
         fp.process(stdin=stdin, stdout=stdout)
@@ -247,7 +247,7 @@ class JSONFilterPipelineTestCase(TestCase):
 
     def test_filter_pipeline(self):
         fp = FilterPipeline([IsNotAReplyFilter()],
-                            codec=self.CODEC_CLASS)
+                            codec_class=self.CODEC_CLASS)
         stdin = StringIO(self.SAMPLE)
         stdout = StringIO()
         fp.process(stdin=stdin, stdout=stdout)
@@ -259,7 +259,7 @@ class JSONFilterPipelineTestCase(TestCase):
                 MSISDNFilter('from_addr', '+27817030792')),
             TimestampFilter(datetime(2013, 9, 10),
                             datetime(2013, 9, 10, 23, 59, 59))
-        ], codec=self.CODEC_CLASS)
+        ], codec_class=self.CODEC_CLASS)
         stdin = StringIO(self.SAMPLE)
         stdout = StringIO()
         fp.process(stdin=stdin, stdout=stdout)

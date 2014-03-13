@@ -5,8 +5,5 @@ from gdt import cmdline
 if __name__ == '__main__':
     # NOTE: argparse is insane
     parser = cmdline.get_parser()
-    cmd_args = vars(parser.parse_args())
-
-    subcommand_name = cmd_args.pop('subcommand_name')
-    pipeline = cmdline.dispatch(subcommand_name, cmd_args)
-    pipeline.process()
+    args = parser.parse_args()
+    cmdline.dispatch(vars(args))
