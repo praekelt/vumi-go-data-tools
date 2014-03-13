@@ -1,13 +1,13 @@
-import csv
 import json
 from StringIO import StringIO
 from unittest import TestCase
 from datetime import datetime
 
-from gdt.vumigomessage import (
-    VumiGoMessageParser, DirectionalFilter, MSISDNFilter, TimestampFilter,
-    FilterPipeline, FilterException, IsAReplyFilter, IsNotAReplyFilter,
-    CSVMessageCodec, JSONMessageCodec)
+from gdt.codec import CSVMessageCodec, JSONMessageCodec
+from gdt.filters import (
+    DirectionalFilter, MSISDNFilter, TimestampFilter,
+    FilterPipeline, FilterException, IsAReplyFilter, IsNotAReplyFilter)
+from gdt.main import GDT
 
 
 class GdtTestCase(TestCase):
@@ -23,18 +23,18 @@ class GdtTestCase(TestCase):
                 ",af266289e40949388b5a8cacb4a2d13b,,resume,ussd,outbound"
                 ",,,,default\r\n")
     INBOUND_2 = ("2013-09-09 19:24:03.289543,+27817030710,*120*8864*1203#,"
-               ",af266289e40949388b5a8cacb4a2d13a,,new,ussd,inbound"
-               ",,,,default\r\n")
+                 ",af266289e40949388b5a8cacb4a2d13a,,new,ussd,inbound"
+                 ",,,,default\r\n")
     OUTBOUND_2 = ("2013-09-09 19:24:03.289543,*120*8864*1203#,+27817030710,"
-                ",af266289e40949388b5a8cacb4a2d13b,,resume,ussd,outbound"
-                ",,,,default\r\n")
+                  ",af266289e40949388b5a8cacb4a2d13b,,resume,ussd,outbound"
+                  ",,,,default\r\n")
 
     def get_parser(self, options):
         defaults = {
             # some parser argparse defaults here
         }
         defaults.update(options)
-        return VumiGoMessageParser(defaults)
+        return GDT(defaults)
 
     def parse(self, parser, csv):
         parser.stdin = StringIO(csv)
@@ -91,9 +91,20 @@ class GdtTestCase(TestCase):
         parser = self.get_parser({
             'msisdn': '+27817030710'
         })
-        SAMPLE = self.HEADER + self.INBOUND + self.OUTBOUND + self.INBOUND_2 + self.OUTBOUND_2
+        SAMPLE = ''.join([
+            self.HEADER,
+            self.INBOUND,
+            self.OUTBOUND,
+            self.INBOUND_2,
+            self.OUTBOUND_2,
+        ])
         output = self.parse(parser, SAMPLE)
-        self.assertEqual(output, self.HEADER + self.INBOUND_2 + self.OUTBOUND_2)
+        self.assertEqual(output, ''.join([
+            self.HEADER,
+            self.INBOUND_2,
+            self.OUTBOUND_2,
+        ]))
+
 
 class FilterTestCase(TestCase):
 
@@ -163,7 +174,7 @@ class CSVFilterPipelineTestCase(TestCase):
 
     def test_filter_pipeline(self):
         fp = FilterPipeline([DirectionalFilter('inbound')],
-                            codec=self.CODEC_CLASS)
+                            codec_class=self.CODEC_CLASS)
         stdin = StringIO(self.SAMPLE)
         stdout = StringIO()
         fp.process(stdin=stdin, stdout=stdout)
@@ -175,7 +186,7 @@ class CSVFilterPipelineTestCase(TestCase):
                 MSISDNFilter('from_addr', '+27817030792')),
             TimestampFilter(datetime(2013, 9, 10),
                             datetime(2013, 9, 10, 23, 59, 59))
-        ], codec=self.CODEC_CLASS)
+        ], codec_class=self.CODEC_CLASS)
         stdin = StringIO(self.SAMPLE)
         stdout = StringIO()
         fp.process(stdin=stdin, stdout=stdout)
@@ -236,7 +247,7 @@ class JSONFilterPipelineTestCase(TestCase):
 
     def test_filter_pipeline(self):
         fp = FilterPipeline([IsNotAReplyFilter()],
-                            codec=self.CODEC_CLASS)
+                            codec_class=self.CODEC_CLASS)
         stdin = StringIO(self.SAMPLE)
         stdout = StringIO()
         fp.process(stdin=stdin, stdout=stdout)
@@ -248,7 +259,7 @@ class JSONFilterPipelineTestCase(TestCase):
                 MSISDNFilter('from_addr', '+27817030792')),
             TimestampFilter(datetime(2013, 9, 10),
                             datetime(2013, 9, 10, 23, 59, 59))
-        ], codec=self.CODEC_CLASS)
+        ], codec_class=self.CODEC_CLASS)
         stdin = StringIO(self.SAMPLE)
         stdout = StringIO()
         fp.process(stdin=stdin, stdout=stdout)

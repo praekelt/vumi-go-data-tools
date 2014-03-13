@@ -1,0 +1,9 @@
+#!python
+
+from gdt import cmdline
+
+if __name__ == '__main__':
+    # NOTE: argparse is insane
+    parser = cmdline.get_parser()
+    args = parser.parse_args()
+    cmdline.dispatch(vars(args))
