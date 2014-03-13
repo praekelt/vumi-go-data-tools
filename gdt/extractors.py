@@ -19,7 +19,7 @@ class Extractor(object):
     def __init__(self):
         self._chain = []
 
-    def aggregate(self, row):
+    def extract(self, row):
         raise NotImplemented('Subclasses should implement')
 
     def chain(self, filter):
@@ -31,13 +31,13 @@ class Extractor(object):
 
     def get_chained_field_names(self):
         return reduce(
-            lambda acc, agg: acc.append(agg.get_field_names()),
+            lambda acc, extractor: acc + extractor.get_field_names(),
             self._chain, self.get_field_names())
 
     def process(self, row):
         return reduce(
-            lambda accumulator, aggregator: aggregator.aggregate(accumulator),
-            self._chain, self.aggregate(row))
+            lambda accumulator, extractor: extractor.extract(accumulator),
+            self._chain, self.extract(row))
 
 
 class FieldExtractor(Extractor):
@@ -51,12 +51,12 @@ class FieldExtractor(Extractor):
     def get_field_names(self):
         return ['timestamp'] + self.fields
 
-    def aggregate(self, row):
+    def extract(self, row):
         if self.date_format is not None:
             date = dateutil.parser.parse(row['timestamp'])
             date_str = date.strftime(self.date_format)
         else:
-            date_str = date.isoformat()
+            date_str = row['timestamp']
 
         result = {
             'timestamp': date_str
@@ -74,27 +74,27 @@ class ExtractorPipeline(object):
 
     input_codec = CSVMessageCodec
 
-    def __init__(self, aggregators=None, codec_class=None):
-        self.aggregators = ([] if aggregators is None else aggregators)
+    def __init__(self, extractors=None, codec_class=None):
+        self.extractors = ([] if extractors is None else extractors)
         self.codec_class = (self.input_codec if codec_class is None
                             else codec_class)
 
-    def add(self, aggregator):
-        self.aggregators.append(aggregator)
+    def add(self, extractor):
+        self.extractors.append(extractor)
 
     def empty(self):
-        return len(self.aggregators) == 0
+        return len(self.extractors) == 0
 
-    def get_aggregator_field_names(self):
+    def get_extractor_field_names(self):
         return reduce(
-            lambda acc, agg: acc + agg.get_chained_field_names(),
-            self.aggregators, [])
+            lambda acc, extractor: acc + extractor.get_chained_field_names(),
+            self.extractors, [])
 
     def process(self, stdin=sys.stdin, stdout=sys.stdout):
         input_codec = self.codec_class(stdin, stdout)
-        field_names = self.get_aggregator_field_names()
+        field_names = self.get_extractor_field_names()
         output = csv.DictWriter(stdout, fieldnames=field_names)
         output.writerow(dict(zip(field_names, field_names)))
         for row in input_codec.readrows():
-            for aggregator in self.aggregators:
-                output.writerow(aggregator.process(row))
+            for extractor in self.extractors:
+                output.writerow(extractor.process(row))
