@@ -30,4 +30,5 @@ class JSONMessageCodec(object):
             yield json.loads(line)
 
     def writerow(self, message):
-        json.dump(message, fp=self.stdout)
+        row = json.dumps(message)
+        self.stdout.write('%s\n' % (row,))
