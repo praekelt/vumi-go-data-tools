@@ -6,7 +6,8 @@ from gdt import codec
 from gdt.filters import (FilterPipeline, MSISDNFilter, TimestampFilter,
                          DirectionalFilter, SessionEventFilter)
 from gdt.extractors import ExtractorPipeline, FieldExtractor
-from gdt.aggregators import AggregatorPipeline, UniquesAggregator
+from gdt.aggregators import (AggregatorPipeline, UniquesAggregator,
+                             SimpleAggregator)
 
 
 def make_pipeline(filter_class, kwargs, codec_class):
@@ -34,6 +35,7 @@ def dispatch(args):
         'session': partial(make_pipeline, SessionEventFilter),
         'extract': partial(make_extractor, FieldExtractor),
         'aggregate': partial(make_aggregator, UniquesAggregator),
+        'count': partial(make_aggregator, SimpleAggregator),
     }
 
     pipeline = dispatch_map[subcommand_name](args, codec_class)
@@ -118,5 +120,12 @@ def get_parser():
         '-f', '--field', help='The field to extract.',
         dest='fields', required=True, nargs='+')
     aggregator_parser.set_defaults(subcommand_name='aggregate')
+
+    count_parser = subparsers.add_parser(
+        'count', help='Count fields')
+    count_parser.add_argument(
+        '-f', '--field', help='The field to extract.',
+        dest='fields', required=True, nargs='+')
+    count_parser.set_defaults(subcommand_name='count')
 
     return parser

@@ -46,6 +46,35 @@ class UniquesAggregator(Aggregator):
             yield d
 
 
+class SimpleAggregator(Aggregator):
+
+    def __init__(self, fields):
+        super(Aggregator, self).__init__()
+        self.fields = fields
+        self.data = defaultdict(lambda: defaultdict(int))
+
+    def get_field_names(self):
+        return ['timestamp'] + self.fields
+
+    def aggregate(self, row):
+        d = self.data[row['timestamp']]
+        for field in self.fields:
+            d[field] += 1
+        return d
+
+    def get_data(self):
+        for timestamp in sorted(self.data.keys()):
+            d = {
+                'timestamp': timestamp,
+            }
+            for field, count in self.data[timestamp].items():
+                d[field] = count
+
+            yield d
+
+
+
+
 class AggregatorPipeline(object):
 
     # NOTE: this always outputs CSV
