@@ -81,6 +81,17 @@ class TimestampFilter(Filter):
         return self.start <= vumitimestamp
 
 
+class SessionEventFilter(Filter):
+
+    def __init__(self, event_type):
+        super(SessionEventFilter, self).__init__()
+        self.event_type = event_type
+
+    def apply(self, row):
+        # Have to str() here because CSV string's the `None` values.
+        return str(row.get('session_event')) == str(self.event_type)
+
+
 class FilterPipeline(object):
 
     default_codec = CSVMessageCodec

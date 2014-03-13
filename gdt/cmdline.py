@@ -4,7 +4,7 @@ from functools import partial
 
 from gdt import codec
 from gdt.filters import (FilterPipeline, MSISDNFilter, TimestampFilter,
-                         DirectionalFilter)
+                         DirectionalFilter, SessionEventFilter)
 
 
 def make_pipeline(filter_class, kwargs, codec_class):
@@ -18,7 +18,8 @@ def dispatch(args):
     dispatch_map = {
         'msisdn': partial(make_pipeline, MSISDNFilter),
         'daterange': partial(make_pipeline, TimestampFilter),
-        'direction': partial(make_pipeline, DirectionalFilter)
+        'direction': partial(make_pipeline, DirectionalFilter),
+        'session': partial(make_pipeline, SessionEventFilter)
     }
 
     pipeline = dispatch_map[subcommand_name](args, codec_class)
@@ -77,5 +78,13 @@ def get_parser():
         required=True, choices=['inbound', 'outbound'],
         dest='direction')
     direction_parser.set_defaults(subcommand_name='direction')
+
+    session_parser = subparsers.add_parser(
+        'session', help='Filter on session events.')
+    session_parser.add_argument(
+        '-t', '--event-type', help='The session events to extract.',
+        dest='event_type', required=False,
+        choices=['new', 'resume', 'end'])
+    session_parser.set_defaults(subcommand_name='session')
 
     return parser

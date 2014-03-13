@@ -6,7 +6,8 @@ from datetime import datetime
 from gdt.codec import CSVMessageCodec, JSONMessageCodec
 from gdt.filters import (
     DirectionalFilter, MSISDNFilter, TimestampFilter,
-    FilterPipeline, FilterException, IsAReplyFilter, IsNotAReplyFilter)
+    FilterPipeline, FilterException, IsAReplyFilter, IsNotAReplyFilter,
+    SessionEventFilter)
 from gdt.main import GDT
 
 
@@ -135,6 +136,15 @@ class FilterTestCase(TestCase):
         self.assertRaises(
             FilterException, TimestampFilter,
             datetime(2013, 1, 1), datetime(2000, 1, 1))
+
+    def test_session_event_filter(self):
+        f = SessionEventFilter('new')
+        self.assertTrue(f.apply({'session_event': 'new'}))
+        self.assertFalse(f.apply({'session_event': 'end'}))
+
+        f = SessionEventFilter(None)
+        self.assertTrue(f.apply({'session_event': None}))
+        self.assertFalse(f.apply({'session_event': 'end'}))
 
     def test_filter_chaining(self):
         f = TimestampFilter(datetime(2013, 1, 1)).chain(
