@@ -100,7 +100,6 @@ class FilterPipeline(object):
         self.filters = ([] if filters is None else filters)
         self.codec_class = (self.default_codec if codec_class is None
                             else codec_class)
-        self._chain = []
 
     def add(self, filter):
         self.filters.append(filter)

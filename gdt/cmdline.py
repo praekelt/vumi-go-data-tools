@@ -5,10 +5,16 @@ from functools import partial
 from gdt import codec
 from gdt.filters import (FilterPipeline, MSISDNFilter, TimestampFilter,
                          DirectionalFilter, SessionEventFilter)
+from gdt.extractors import ExtractorPipeline, FieldExtractor
 
 
 def make_pipeline(filter_class, kwargs, codec_class):
     return FilterPipeline([filter_class(**kwargs)], codec_class=codec_class)
+
+
+def make_extractor(extractor_class, kwargs, codec_class):
+    return ExtractorPipeline([extractor_class(**kwargs)],
+                             codec_class=codec_class)
 
 
 def dispatch(args):
@@ -19,7 +25,8 @@ def dispatch(args):
         'msisdn': partial(make_pipeline, MSISDNFilter),
         'daterange': partial(make_pipeline, TimestampFilter),
         'direction': partial(make_pipeline, DirectionalFilter),
-        'session': partial(make_pipeline, SessionEventFilter)
+        'session': partial(make_pipeline, SessionEventFilter),
+        'extract': partial(make_extractor, FieldExtractor),
     }
 
     pipeline = dispatch_map[subcommand_name](args, codec_class)
@@ -86,5 +93,16 @@ def get_parser():
         dest='event_type', required=False,
         choices=['new', 'resume', 'end'])
     session_parser.set_defaults(subcommand_name='session')
+
+    extractor_parser = subparsers.add_parser(
+        'extract', help='Extract fields.')
+    extractor_parser.add_argument(
+        '-f', '--field', help='The field to extract.',
+        dest='fields', required=True, nargs='+')
+    extractor_parser.add_argument(
+        '-df', '--date-format',
+        help='`strftime` formatting to apply to the timestamp.',
+        dest='date_format', required=True)
+    extractor_parser.set_defaults(subcommand_name='extract')
 
     return parser
