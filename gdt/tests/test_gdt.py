@@ -7,7 +7,7 @@ from gdt.codec import CSVMessageCodec, JSONMessageCodec
 from gdt.filters import (
     DirectionalFilter, MSISDNFilter, TimestampFilter,
     FilterPipeline, FilterException, IsAReplyFilter, IsNotAReplyFilter,
-    SessionEventFilter)
+    SessionEventFilter, WeekFilter)
 from gdt.main import GDT
 
 
@@ -164,6 +164,12 @@ class FilterTestCase(TestCase):
             'direction': 'inbound', 'timestamp': '2013-06-01'}))
         self.assertFalse(f.process({
             'direction': 'inbound', 'timestamp': '2014-06-01'}))
+
+    def test_week_filter(self):
+        f = WeekFilter(2013, [1])
+        self.assertTrue(f.apply({'timestamp': '2013-01-04'}))
+        self.assertFalse(f.apply({'timestamp': '2012-01-04'}))
+
 
 
 class CSVFilterPipelineTestCase(TestCase):

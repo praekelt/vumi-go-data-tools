@@ -1,6 +1,6 @@
 import re
 import sys
-import datetime
+from datetime import date, timedelta, datetime
 
 import dateutil.parser
 
@@ -89,15 +89,21 @@ class WeekFilter(Filter):
         super(WeekFilter, self).__init__()
         self.year = year
         self.weeks = weeks
-        
+    
+    def week_start_date(self, year, week):
+        d = datetime(year, 1, 1)    
+        delta_days = d.isoweekday() - 1
+        delta_weeks = week
+        if year == d.isocalendar()[0]:
+            delta_weeks -= 1
+        delta = timedelta(days=-delta_days, weeks=delta_weeks)
+        return d + delta
 
     def apply(self, row):
         vumitimestamp = dateutil.parser.parse(row['timestamp'])
         for week in self.weeks:
-            first = datetime.datetime(self.year, 1, 1)
-            week0 = first - datetime.timedelta(days=first.isoweekday())
-            start = week0 + datetime.timedelta(weeks=week)
-            end = start + datetime.timedelta(days=6)
+            start = self.week_start_date(self.year, week)
+            end = start + timedelta(days=6)
             if start <= vumitimestamp < end:
                 return True
 
