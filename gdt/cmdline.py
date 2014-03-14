@@ -5,7 +5,7 @@ from functools import partial
 from gdt import codec
 from gdt.filters import (FilterPipeline, MSISDNFilter, TimestampFilter,
                          DirectionalFilter, SessionEventFilter, ContactFilter,
-                         RegexFilter)
+                         RegexFilter, WeekFilter)
 from gdt.extractors import ExtractorPipeline, FieldExtractor
 from gdt.aggregators import (AggregatorPipeline, UniquesAggregator,
                              SimpleAggregator)
@@ -32,6 +32,7 @@ def dispatch(args):
     dispatch_map = {
         'msisdn': partial(make_pipeline, MSISDNFilter),
         'daterange': partial(make_pipeline, TimestampFilter),
+        'weekrange': partial(make_pipeline, WeekFilter),
         'direction': partial(make_pipeline, DirectionalFilter),
         'session': partial(make_pipeline, SessionEventFilter),
         'contacts': partial(make_pipeline, ContactFilter),
@@ -89,6 +90,16 @@ def get_parser():
         dest='end',
         required=False, type=dateutil.parser.parse)
     daterange_parser.set_defaults(subcommand_name='daterange')
+
+    weekrange_parser = subparsers.add_parser(
+        'weekrange', help='Filter on a week range.')
+    weekrange_parser.add_argument(
+        '-y', '--year', help='The year to extract week(s) from',
+        dest='year', type=int, required=False)
+    weekrange_parser.add_argument(
+        '-w', '--weeks', help='The week(s) to extract',
+        dest='weeks', type=int, required=False, nargs='+')
+    weekrange_parser.set_defaults(subcommand_name='weekrange')
 
     direction_parser = subparsers.add_parser(
         'direction', help='Filter on message direction.')
