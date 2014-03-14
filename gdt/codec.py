@@ -22,7 +22,7 @@ class CSVMessageCodec(object):
 
 class JSONMessageCodec(object):
 
-    def __init__(self, stdin, stdout):
+    def __init__(self, stdin, stdout, write_header=True):
         self.stdin = stdin
         self.stdout = stdout
 

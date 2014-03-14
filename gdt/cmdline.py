@@ -4,7 +4,8 @@ from functools import partial
 
 from gdt import codec
 from gdt.filters import (FilterPipeline, MSISDNFilter, TimestampFilter,
-                         DirectionalFilter, SessionEventFilter)
+                         DirectionalFilter, SessionEventFilter, ContactFilter,
+                         RegexFilter)
 from gdt.extractors import ExtractorPipeline, FieldExtractor
 from gdt.aggregators import (AggregatorPipeline, UniquesAggregator,
                              SimpleAggregator)
@@ -33,6 +34,8 @@ def dispatch(args):
         'daterange': partial(make_pipeline, TimestampFilter),
         'direction': partial(make_pipeline, DirectionalFilter),
         'session': partial(make_pipeline, SessionEventFilter),
+        'contacts': partial(make_pipeline, ContactFilter),
+        'regex': partial(make_pipeline, RegexFilter),
         'extract': partial(make_extractor, FieldExtractor),
         'aggregate': partial(make_aggregator, UniquesAggregator),
         'count': partial(make_aggregator, SimpleAggregator),
@@ -102,6 +105,23 @@ def get_parser():
         dest='event_type', required=False,
         choices=['new', 'resume', 'end'])
     session_parser.set_defaults(subcommand_name='session')
+
+    contact_parser = subparsers.add_parser(
+        'contacts', help='Filter for certain contact addresses')
+    contact_parser.add_argument(
+        '-a', '--address', required=False, dest='addresses', nargs='+')
+    contact_parser.set_defaults(subcommand_name='contacts')
+
+    regex_parser = subparsers.add_parser(
+        'regex', help='Filter for regex matches')
+    regex_parser.add_argument(
+        '-f', '--field', required=True, dest='field')
+    regex_parser.add_argument(
+        '-p', '--pattern', required=True, dest='pattern')
+    regex_parser.add_argument(
+        '-i', '--ignore-case', required=False, dest='ignore_case',
+        action='store_const', const=True, default=False)
+    regex_parser.set_defaults(subcommand_name='regex')
 
     extractor_parser = subparsers.add_parser(
         'extract', help='Extract fields.')
