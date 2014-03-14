@@ -28,3 +28,5 @@ Vumi Go contact groups that interact with a service.
 ::
 
   $ cat gdt/tests/messages-export-good.csv | gdt msisdn -m +27817030792 -t to_addr | gdt direction -d outbound | gdt daterange -s "2013-09-09 19:24" -e "2013-09-09 19:38"
+
+  $ cat gdt/tests/messages-export-week-spread.csv | gdt weekrange -y 2013 -w 1 2 3 4
