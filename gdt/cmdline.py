@@ -107,7 +107,8 @@ def get_parser():
     session_parser.set_defaults(subcommand_name='session')
 
     contact_parser = subparsers.add_parser(
-        'contacts', help='Filter for certain contact addresses')
+        'contacts', help='Filter for certain contact addresses',
+        fromfile_prefix_chars='@')
     contact_parser.add_argument(
         '-a', '--address', required=False, dest='addresses', nargs='+')
     contact_parser.set_defaults(subcommand_name='contacts')
