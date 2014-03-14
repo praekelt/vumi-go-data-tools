@@ -1,3 +1,4 @@
+import re
 import sys
 
 import dateutil.parser
@@ -92,6 +93,30 @@ class SessionEventFilter(Filter):
         return str(row.get('session_event')) == str(self.event_type)
 
 
+class ContactFilter(Filter):
+
+    def __init__(self, addresses):
+        super(ContactFilter, self).__init__()
+        self.addresses = addresses
+
+    def apply(self, row):
+        return row['from_addr'] in self.addresses
+
+
+class RegexFilter(Filter):
+    def __init__(self, field, pattern, ignore_case):
+        super(RegexFilter, self).__init__()
+        self.field = field
+        if ignore_case:
+            self.pattern = re.compile(pattern, re.IGNORECASE)
+        else:
+            self.pattern = re.compile(pattern)
+
+    def apply(self, row):
+        if self.field in row and row[self.field]:
+            return self.pattern.match(row[self.field])
+
+
 class FilterPipeline(object):
 
     default_codec = CSVMessageCodec
@@ -100,7 +125,6 @@ class FilterPipeline(object):
         self.filters = ([] if filters is None else filters)
         self.codec_class = (self.default_codec if codec_class is None
                             else codec_class)
-        self._chain = []
 
     def add(self, filter):
         self.filters.append(filter)

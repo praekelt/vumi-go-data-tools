@@ -4,11 +4,25 @@ from functools import partial
 
 from gdt import codec
 from gdt.filters import (FilterPipeline, MSISDNFilter, TimestampFilter,
-                         DirectionalFilter, SessionEventFilter)
+                         DirectionalFilter, SessionEventFilter, ContactFilter,
+                         RegexFilter)
+from gdt.extractors import ExtractorPipeline, FieldExtractor
+from gdt.aggregators import (AggregatorPipeline, UniquesAggregator,
+                             SimpleAggregator)
 
 
 def make_pipeline(filter_class, kwargs, codec_class):
     return FilterPipeline([filter_class(**kwargs)], codec_class=codec_class)
+
+
+def make_extractor(extractor_class, kwargs, codec_class):
+    return ExtractorPipeline([extractor_class(**kwargs)],
+                             codec_class=codec_class)
+
+
+def make_aggregator(aggregator_class, kwargs, codec_class):
+    return AggregatorPipeline(aggregator_class(**kwargs),
+                              codec_class=codec_class)
 
 
 def dispatch(args):
@@ -19,7 +33,12 @@ def dispatch(args):
         'msisdn': partial(make_pipeline, MSISDNFilter),
         'daterange': partial(make_pipeline, TimestampFilter),
         'direction': partial(make_pipeline, DirectionalFilter),
-        'session': partial(make_pipeline, SessionEventFilter)
+        'session': partial(make_pipeline, SessionEventFilter),
+        'contacts': partial(make_pipeline, ContactFilter),
+        'regex': partial(make_pipeline, RegexFilter),
+        'extract': partial(make_extractor, FieldExtractor),
+        'aggregate': partial(make_aggregator, UniquesAggregator),
+        'count': partial(make_aggregator, SimpleAggregator),
     }
 
     pipeline = dispatch_map[subcommand_name](args, codec_class)
@@ -86,5 +105,48 @@ def get_parser():
         dest='event_type', required=False,
         choices=['new', 'resume', 'end'])
     session_parser.set_defaults(subcommand_name='session')
+
+    contact_parser = subparsers.add_parser(
+        'contacts', help='Filter for certain contact addresses',
+        fromfile_prefix_chars='@')
+    contact_parser.add_argument(
+        '-a', '--address', required=False, dest='addresses', nargs='+')
+    contact_parser.set_defaults(subcommand_name='contacts')
+
+    regex_parser = subparsers.add_parser(
+        'regex', help='Filter for regex matches')
+    regex_parser.add_argument(
+        '-f', '--field', required=True, dest='field')
+    regex_parser.add_argument(
+        '-p', '--pattern', required=True, dest='pattern')
+    regex_parser.add_argument(
+        '-i', '--ignore-case', required=False, dest='ignore_case',
+        action='store_const', const=True, default=False)
+    regex_parser.set_defaults(subcommand_name='regex')
+
+    extractor_parser = subparsers.add_parser(
+        'extract', help='Extract fields.')
+    extractor_parser.add_argument(
+        '-f', '--field', help='The field to extract.',
+        dest='fields', required=True, nargs='+')
+    extractor_parser.add_argument(
+        '-df', '--date-format',
+        help='`strftime` formatting to apply to the timestamp.',
+        dest='date_format', required=True)
+    extractor_parser.set_defaults(subcommand_name='extract')
+
+    aggregator_parser = subparsers.add_parser(
+        'aggregate', help='Aggregate fields')
+    aggregator_parser.add_argument(
+        '-f', '--field', help='The field to extract.',
+        dest='fields', required=True, nargs='+')
+    aggregator_parser.set_defaults(subcommand_name='aggregate')
+
+    count_parser = subparsers.add_parser(
+        'count', help='Count fields')
+    count_parser.add_argument(
+        '-f', '--field', help='The field to extract.',
+        dest='fields', required=True, nargs='+')
+    count_parser.set_defaults(subcommand_name='count')
 
     return parser
