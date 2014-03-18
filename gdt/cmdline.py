@@ -99,7 +99,7 @@ def get_parser():
         '-y', '--year', help='The year to extract week(s) from',
         dest='year', type=int, required=False)
     weekrange_parser.add_argument(
-        '-w', '--weeks', help='The week(s) to extract',
+        '-w', '--weeks', help='The week(s) to extract. Note: Week 1 is the week with Jan 4th in it.',
         dest='weeks', type=int, required=False, nargs='+')
     weekrange_parser.set_defaults(subcommand_name='weekrange')
 
