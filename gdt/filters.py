@@ -90,22 +90,11 @@ class WeekFilter(Filter):
         self.year = year
         self.weeks = weeks
     
-    def week_start_date(self, year, week):
-        d = datetime(year, 1, 1)    
-        delta_days = d.isoweekday() - 1
-        delta_weeks = week
-        if year == d.isocalendar()[0]:
-            delta_weeks -= 1
-        delta = timedelta(days=-delta_days, weeks=delta_weeks)
-        return d + delta
-
     def apply(self, row):
         vumitimestamp = dateutil.parser.parse(row['timestamp'])
-        for week in self.weeks:
-            start = self.week_start_date(self.year, week)
-            end = start + timedelta(days=6)
-            if start <= vumitimestamp < end:
-                return True
+        if int(vumitimestamp.strftime('%Y')) == self.year and int(vumitimestamp.strftime('%W')) in self.weeks:
+            return True
+           
 
 
 class SessionEventFilter(Filter):
