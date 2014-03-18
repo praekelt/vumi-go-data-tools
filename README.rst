@@ -30,3 +30,19 @@ Vumi Go contact groups that interact with a service.
   $ cat gdt/tests/messages-export-good.csv | gdt msisdn -m +27817030792 -t to_addr | gdt direction -d outbound | gdt daterange -s "2013-09-09 19:24" -e "2013-09-09 19:38"
 
   $ cat gdt/tests/messages-export-week-spread.csv | gdt weekrange -y 2013 -w 1 2 3 4
+
+  $ cat gdt/tests/messages-export-good.csv | gdt session -t new
+
+  $ cat gdt/tests/messages-export-good.csv | gdt contacts -a +123456 +123457
+
+  $ cat gdt/tests/messages-export-good.csv | gdt contacts -a @contact_file.txt
+
+  $ cat gdt/tests/messages-export-good.csv | gdt regex -f content -p "^we think" -i
+
+  $ cat gdt/tests/messages-export-good.csv | gdt extract -f to_addr session_event -df "%M" 
+
+  $ cat gdt/tests/messages-export-good.csv | gdt extract -f to_addr session_event -df "%M" | gdt aggregate -f to_addr
+
+  $ cat gdt/tests/messages-export-good.csv | gdt extract -f to_addr session_event -df "%M" | gdt count -f to_addr
+
+  $ cat gdt/tests/messages-export-week-spread.csv | gdt weekrange -y 2013 -w 1 2 3 4

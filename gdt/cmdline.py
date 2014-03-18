@@ -55,7 +55,9 @@ def get_codec(codec_name):
 
 def get_parser():
 
-    parser = argparse.ArgumentParser(description='Vumi Go Data Tools')
+    parser = argparse.ArgumentParser(description="""Vumi Go Data Tools for CSV and JSON
+        formatted data from STDIN. Use `--codec` to specify. Designed to pipe output from one 
+        subcommand to another. Use `gdt subcommand --help` for more info.""")
     parser.add_argument(
         '-c', '--codec', help='Which codec to use.', required=False,
         dest='codec_class', type=get_codec, default=codec.CSVMessageCodec)
@@ -121,7 +123,9 @@ def get_parser():
         'contacts', help='Filter for certain contact addresses',
         fromfile_prefix_chars='@')
     contact_parser.add_argument(
-        '-a', '--address', required=False, dest='addresses', nargs='+')
+        '-a', '--address', required=False, dest='addresses', nargs='+', 
+        help="""Addresses should be space seperated. Or from a file using 
+        `@filename.txt`, where addresses are one per line in file""")
     contact_parser.set_defaults(subcommand_name='contacts')
 
     regex_parser = subparsers.add_parser(
@@ -129,16 +133,17 @@ def get_parser():
     regex_parser.add_argument(
         '-f', '--field', required=True, dest='field')
     regex_parser.add_argument(
-        '-p', '--pattern', required=True, dest='pattern')
+        '-p', '--pattern', required=True, dest='pattern', help="""By default
+        a pattern will be case-sensitive. Use `-i` to ignore case.""")
     regex_parser.add_argument(
         '-i', '--ignore-case', required=False, dest='ignore_case',
         action='store_const', const=True, default=False)
     regex_parser.set_defaults(subcommand_name='regex')
 
     extractor_parser = subparsers.add_parser(
-        'extract', help='Extract fields.')
+        'extract', help='Extract named fields from file.')
     extractor_parser.add_argument(
-        '-f', '--field', help='The field to extract.',
+        '-f', '--field', help='The field(s) to extract. Enter space seperated list.',
         dest='fields', required=True, nargs='+')
     extractor_parser.add_argument(
         '-df', '--date-format',
@@ -149,14 +154,14 @@ def get_parser():
     aggregator_parser = subparsers.add_parser(
         'aggregate', help='Aggregate fields')
     aggregator_parser.add_argument(
-        '-f', '--field', help='The field to extract.',
+        '-f', '--field', help='The field(s) to extract. Enter space seperated list.',
         dest='fields', required=True, nargs='+')
     aggregator_parser.set_defaults(subcommand_name='aggregate')
 
     count_parser = subparsers.add_parser(
         'count', help='Count fields')
     count_parser.add_argument(
-        '-f', '--field', help='The field to extract.',
+        '-f', '--field', help='The field(s) to extract. Enter space seperated list.',
         dest='fields', required=True, nargs='+')
     count_parser.set_defaults(subcommand_name='count')
 

@@ -7,6 +7,7 @@ from gdt.codec import CSVMessageCodec, JSONMessageCodec
 from gdt.filters import (
     DirectionalFilter, MSISDNFilter, TimestampFilter,
     FilterPipeline, FilterException, IsAReplyFilter, IsNotAReplyFilter,
+<<<<<<< HEAD
     SessionEventFilter, WeekFilter)
 from gdt.main import GDT
 
@@ -105,6 +106,9 @@ class GdtTestCase(TestCase):
             self.INBOUND_2,
             self.OUTBOUND_2,
         ]))
+=======
+    SessionEventFilter)
+>>>>>>> develop
 
 
 class FilterTestCase(TestCase):
