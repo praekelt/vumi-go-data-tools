@@ -1,5 +1,6 @@
 import re
 import sys
+from datetime import date, timedelta, datetime
 
 import dateutil.parser
 
@@ -80,6 +81,20 @@ class TimestampFilter(Filter):
         if self.end is not None:
             return self.start <= vumitimestamp < self.end
         return self.start <= vumitimestamp
+
+
+class WeekFilter(Filter):
+
+    def __init__(self, year, weeks):
+        super(WeekFilter, self).__init__()
+        self.year = year
+        self.weeks = weeks
+    
+    def apply(self, row):
+        vumitimestamp = dateutil.parser.parse(row['timestamp'])
+        if int(vumitimestamp.strftime('%Y')) == self.year and int(vumitimestamp.strftime('%W')) in self.weeks:
+            return True
+           
 
 
 class SessionEventFilter(Filter):
