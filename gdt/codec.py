@@ -32,4 +32,4 @@ class JSONMessageCodec(object):
 
     def writerow(self, message):
         row = json.dumps(message)
-        self.stdout.write('%s\n' % (row,))
+        self.stdout.write('%s\n' % (row.encode('utf-8'),))

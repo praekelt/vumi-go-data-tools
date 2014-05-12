@@ -59,11 +59,11 @@ class FieldExtractor(Extractor):
             date_str = row['timestamp']
 
         result = {
-            'timestamp': date_str
+            'timestamp': date_str.encode('utf-8')
         }
 
         for field in self.fields:
-            result[field] = row[field]
+            result[field] = row[field].encode('utf-8')
 
         return result
 
