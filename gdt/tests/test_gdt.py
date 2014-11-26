@@ -1,4 +1,5 @@
 import json
+import re
 from StringIO import StringIO
 from unittest import TestCase
 from datetime import datetime
@@ -7,8 +8,7 @@ from gdt.codec import CSVMessageCodec, JSONMessageCodec
 from gdt.filters import (
     DirectionalFilter, MSISDNFilter, TimestampFilter,
     FilterPipeline, FilterException, IsAReplyFilter, IsNotAReplyFilter,
-    SessionEventFilter, WeekFilter)
-
+    RegexFilter, SessionEventFilter, WeekFilter)
 
 
 class FilterTestCase(TestCase):
@@ -49,6 +49,25 @@ class FilterTestCase(TestCase):
         f = SessionEventFilter(None)
         self.assertTrue(f.apply({'session_event': None}))
         self.assertFalse(f.apply({'session_event': 'end'}))
+
+    def test_regex_filter(self):
+        f = RegexFilter('content', 'Match')
+        self.assertTrue(f.apply({'content': 'Matches'}))
+        self.assertFalse(f.apply({'content': 'matches'}))
+        self.assertFalse(f.apply({'content': 'NoMatches'}))
+
+    def test_regex_filter_one_flag(self):
+        f = RegexFilter('content', 'Match', [re.IGNORECASE])
+        self.assertTrue(f.apply({'content': 'Matches'}))
+        self.assertTrue(f.apply({'content': 'matches'}))
+        self.assertFalse(f.apply({'content': 'NoMatches'}))
+
+    def test_regex_filter_two_flags(self):
+        f = RegexFilter('content', 'Mat.*h', [re.IGNORECASE, re.DOTALL])
+        self.assertTrue(f.apply({'content': 'Matches'}))
+        self.assertTrue(f.apply({'content': 'matches'}))
+        self.assertTrue(f.apply({'content': 'matc\nhes'}))
+        self.assertFalse(f.apply({'content': 'NoMatches'}))
 
     def test_filter_chaining(self):
         f = TimestampFilter(datetime(2013, 1, 1)).chain(
