@@ -1,5 +1,6 @@
 import argparse
 import dateutil.parser
+import re
 from functools import partial
 
 from gdt import codec
@@ -136,8 +137,20 @@ def get_parser():
         '-p', '--pattern', required=True, dest='pattern', help="""By default
         a pattern will be case-sensitive. Use `-i` to ignore case.""")
     regex_parser.add_argument(
-        '-i', '--ignore-case', required=False, dest='ignore_case',
-        action='store_const', const=True, default=False)
+        '-i', '--ignore-case', required=False, dest='flags',
+        action='append_const', const=re.IGNORECASE)
+    regex_parser.add_argument(
+        '-s', '--dot-all', required=False, dest='flags',
+        action='append_const', const=re.DOTALL)
+    regex_parser.add_argument(
+        '-m', '--multi-line', required=False, dest='flags',
+        action='append_const', const=re.MULTILINE)
+    regex_parser.add_argument(
+        '-l', '--locale', required=False, dest='flags',
+        action='append_const', const=re.LOCALE)
+    regex_parser.add_argument(
+        '-u', '--unicode', required=False, dest='flags',
+        action='append_const', const=re.UNICODE)
     regex_parser.set_defaults(subcommand_name='regex')
 
     extractor_parser = subparsers.add_parser(

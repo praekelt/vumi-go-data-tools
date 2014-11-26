@@ -1,3 +1,4 @@
+import operator
 import re
 import sys
 from datetime import date, timedelta, datetime
@@ -119,13 +120,11 @@ class ContactFilter(Filter):
 
 
 class RegexFilter(Filter):
-    def __init__(self, field, pattern, ignore_case):
+    def __init__(self, field, pattern, flags=None):
         super(RegexFilter, self).__init__()
         self.field = field
-        if ignore_case:
-            self.pattern = re.compile(pattern, re.IGNORECASE)
-        else:
-            self.pattern = re.compile(pattern)
+        flags = reduce(operator.__or__, flags or (), 0)
+        self.pattern = re.compile(pattern, flags)
 
     def apply(self, row):
         if self.field in row and row[self.field]:
